@@ -1,0 +1,17 @@
+{
+Code_Name	=> 'GMFD_prcp_daily',
+Time_Series	=> 'daily',
+Start_Date	=> '1981-01-01',
+End_Date	=> '2016-12-31',
+Name		=> 'GMFD, Global 0.25deg, Precipitation, Daily',
+Var_Name	=> 'prcp',
+Units	    => 'mm/day',
+Var_Scale	=> 86400,
+Var_Offset	=> 0,
+Orig_Units	=> 'kg m-2 s-1',
+Bands		=> 366,
+Processing	=> '',
+Projection	=> 'epsg:4326',
+File_Path	=> '/gpfs/group/kaf26/default/rls66/GMFD_25/prcp_daily__YEAR_-_YEAR_.nc;',
+Comment		=> 'https://rda.ucar.edu/datasets/ds314.0/'
+}

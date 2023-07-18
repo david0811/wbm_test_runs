@@ -1,0 +1,17 @@
+{
+Code_Name	=> 'GMFD_tas_daily',
+Time_Series	=> 'daily',
+Start_Date	=> '1981-01-01',
+End_Date	=> '2016-12-31',
+Name		=> 'GMFD, Global 0.25deg, Temperature, Daily',
+Var_Name	=> 'tas',
+Units	    => 'C',
+Var_Scale	=> 1,
+Var_Offset	=> -273.15,
+Orig_Units	=> 'K',
+Bands		=> 366,
+Processing	=> '',
+Projection	=> 'epsg:4326',
+File_Path	=> '/gpfs/group/kaf26/default/dcl5300/GMFD/tas/tas_daily__YEAR_-_YEAR_.nc',
+Comment		=> 'https://rda.ucar.edu/datasets/ds314.0/'
+}

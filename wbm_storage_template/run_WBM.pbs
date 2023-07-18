@@ -1,0 +1,329 @@
+#!/bin/bash
+
+#PBS -l nodes=1:ppn=4
+#PBS -l pmem=30gb
+#PBS -l walltime=12:00:00
+#PBS -A kaf26_c_g_sc_default
+#PBS -j oe
+
+# Get started
+echo "Job started on `hostname` at `date`"
+echo " "
+
+########################################
+# User input section:
+# Start setting important variables
+########################################
+
+#
+# Top-level WBM directory that contains all the required files
+#
+
+export WBM_HOME=/gpfs/group/kaf26/default/dcl5300/test-runs_WBM/current
+
+#
+# Simulation directory
+# 
+export SIM_DIR=$WBM_HOME/$sim_dir
+cd $SIM_DIR
+
+#
+# Scratch directory 
+#
+
+export WBM_SCRATCH=/tmp/$USER/WBM_SCRATCH
+
+#
+# Location of individual model codes. 
+#
+
+export WBM_DIR=$SIM_DIR
+
+#
+# SIF (container) file to use
+#
+
+# SIF_FILE=$WBM_HOME/ubuntu_20.04_wbm_2023_04_17.sif
+SIF_FILE=/gpfs/group/kaf26/default/dcl5300/test-runs_WBM/ubuntu_20.04_wbm_2023_04_17.sif
+
+#
+# Use tmp disk for WBM performance (1) or 0 for no
+# WBM_SCRATCH *MUST* be set to use local /tmp for this!!
+#
+
+use_fast_disk=1
+
+
+#
+# Set default location of WBM spool directories
+#
+
+WBM_SPOOL=$WBM_DIR/spool
+
+# Begin sanity checks
+########################################
+
+# Make sure our home base WBM_HOME exists, otherwise we're unable to run
+
+if [[ ! -d $WBM_HOME ]]
+then
+  echo "Master directory $WBM_HOME not found, unable to continue"
+  exit 249
+fi
+
+# Check scratch directory to see if it exists. If not, create it.
+# Terminate if unable to create the directory.
+
+if [[ ! -d $WBM_SCRATCH ]] 
+then
+  mkdir -p $WBM_SCRATCH
+  local_rc=$?
+  if [[ $local_rc -ne 0 ]]
+  then
+    echo "Error creating temporary directory $WBM_SCRATCH, terminating"
+    exit $local_rc
+  fi
+fi
+
+# Check if SIF file exists
+
+if [ ! -f $SIF_FILE ]
+then
+  echo "SIF File $SIF_FILE does not exist, unable to continue"
+  exit 2
+fi
+
+########################################
+# End of user input, setup, and checks.
+########################################
+
+
+########################################
+# For performance, use rclone to copy the wbm spool_0 and spool_1
+# directories from shared GPFS to local storage.
+########################################
+
+if [ $use_fast_disk -eq 1 ]
+then
+
+# Load rclone module
+  module use /gpfs/group/RISE/sw7/modules
+  module load rclone
+
+# Find rlcone, terminate if not found
+  RCLONE=`which rclone`
+
+  if [ -z $RCLONE ]
+  then
+     echo "No rclone executable detected, unable to continue"
+     exit 128
+  fi
+
+# Initiate copy
+
+  echo " "
+  echo "**********************************************************************"
+  echo "*"
+  echo "* Beginning copy of WBM spool files to $WBM_SCRATCH/wbm"
+
+  mkdir $WBM_SCRATCH/wbm
+  WBM_SPOOL=$WBM_SCRATCH/wbm/spool
+
+  timer_start=$(date +%s)
+
+  $RCLONE sync $WBM_DIR/spool/ $WBM_SCRATCH/wbm/spool
+  local_rc=$?
+  if [ $local_rc -eq 0 ]
+  then
+    echo "* spool successfully copied"
+  else
+    echo "* spool copy failed, exiting"
+    exit $local_rc
+  fi
+
+  echo "*"
+  timer_end=$(date +%s)
+  echo "* File transfer to $WBM_SCRATCH took $(($timer_end-$timer_start)) seconds"
+
+# unload module
+
+  module purge
+
+  echo "*"
+  echo "**********************************************************************"
+fi
+
+#
+# Start up our singularity instance.
+########################################
+
+#
+# Create an instance id based on numeric portion of PBS job id
+#
+
+instance_id=` echo $PBS_JOBID | awk -F. '{print $1}' `
+
+#
+# Name our instance based on the instance id
+#
+
+current_instance="pches_instance_$instance_id"
+
+#
+# Export the instance name so other scripts can use it
+#
+
+export WBM_SINGULARITY_INSTANCE=$current_instance
+
+echo " "
+echo "**********************************************************************"
+echo "*"
+echo "* INFO:  Starting Singularity Container"
+echo "*"
+echo "*    Singularity instance name is $current_instance"
+echo "* "
+
+# Start up our singularity instance. 
+# Define mount points for WBM and scratch directory
+# Fail job if instance cannot start.
+
+singularity instance start  \
+   -B $WBM_DIR:/wbm \
+   -B $WBM_SPOOL:/wbm/spool \
+   $SIF_FILE \
+   $current_instance
+local_rc=$?
+
+if [[ $local_rc == 0 ]]
+then
+  echo "*  Singularity instance $current_instance started on `hostname`"
+  echo " "
+else
+  echo "*  Singularity instance $current_instance failed on `hostname` with code $local_rc. Exiting"
+  exit $local_rc
+fi
+
+echo "*"
+echo "**********************************************************************"
+
+########################################
+# After the container starts, pop WBM into the container and run it
+########################################
+
+/bin/time singularity exec instance://$WBM_SINGULARITY_INSTANCE sh -c "/wbm/model/wbm.pl -v /wbm/wbm_init/wbm.init"
+local_rc=$?
+
+echo " "
+echo "**********************************************************************"
+echo "*"
+echo "* INFO: WBM model runs completed with exit code $local_rc"
+echo "*"
+echo "**********************************************************************"
+
+########################################
+# If model runs were successful, copy changes from local spool back to shared.
+########################################
+
+if [ $local_rc -eq 0 ] && [ $use_fast_disk -eq 1 ]
+then
+
+  echo " "
+  echo "**********************************************************************"
+  echo "*"
+  echo "* Beginning copy of WBM spool files from $WBM_SCRATCH/wbm/spool"
+  echo "*"
+
+# Load rclone module
+  module use /gpfs/group/RISE/sw7/modules
+  module load rclone
+
+# Find rlcone, terminate if not found
+  RCLONE=`which rclone`
+
+  if [ -z $RCLONE ]
+  then
+     echo "ERROR: No rclone executable detected, unable to continue"
+     exit 128
+  fi
+
+# Initiate copy
+
+  timer_start=$(date +%s)
+
+  $RCLONE sync $WBM_SCRATCH/wbm/spool/ $WBM_DIR/spool
+  local_rc=$?
+  if [ $local_rc -eq 0 ]
+  then
+    echo "* spool successfully copied back"
+  else
+    echo "* spool copy back failed"
+  fi
+
+  timer_end=$(date +%s)
+  echo "* File transfer from $WBM_SCRATCH took $(($timer_end-$timer_start)) seconds"
+
+  echo "*"
+  echo "**********************************************************************"
+  echo " "
+
+  module purge
+fi
+
+########################################
+# Shut down our singularity instance.
+########################################
+
+echo " "
+echo "**********************************************************************"
+echo "*"
+echo "* INFO: Shutting down container $WBM_SINGULARITY_INSTANCE"
+echo "*"
+
+singularity instance stop $current_instance
+local_rc=$?
+
+if [[ $local_rc == 0 ]]
+then
+  echo "*  Instance $current_instance shutdown on host `hostname`"
+  echo "* "
+else
+  echo "*  ERROR: Instance $current_instance shutdown failed with code $local_rc."
+  echo "*  You may need to manually check host `hostname` to delete the instance"
+  echo "* "
+fi
+
+echo "**********************************************************************"
+echo " "
+
+########################################
+# Clean up temporary directory
+########################################
+
+if [[ ! -z $WBM_SCRATCH ]]
+then
+  echo "**********************************************************************"
+  echo "* INFO:  Cleaning up temp directory $WBM_SCRATCH"
+  echo "**********************************************************************"
+  /bin/rm -r $WBM_SCRATCH
+fi
+
+if  [[ -z _Inline ]]
+then
+  echo "*   Temporary files in _Inline detected, now deleting."
+  chmod -R o+w _Inline
+  /bin/rm -r _Inline
+fi
+
+########################################
+# Finish up
+########################################
+
+echo " "
+echo "**********************************************************************"
+echo ""
+echo "Parting thoughts before we go..."
+echo " "
+fortune
+echo " "
+echo "Job ended on `hostname` at `date`"
+

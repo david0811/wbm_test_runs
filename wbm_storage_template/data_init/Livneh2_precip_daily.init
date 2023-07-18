@@ -1,0 +1,17 @@
+{
+Code_Name	=> 'Livneh2_precip_daily',
+Time_Series	=> 'daily',
+Start_Date	=> '1950-01-01',
+End_Date	=> '2014-12-31',
+Name		=> 'Livneh2, North America ~6km, Precipitation, Daily',
+Var_Name	=> 'precip',
+Units	    => 'mm/day',
+Var_Scale	=> 86400,
+Var_Offset	=> 0,
+Orig_Units	=> 'kg m-2 s-1',
+Bands		=> 23741,
+Processing	=> '',
+Projection	=> 'epsg:4326',
+File_Path	=> '/gpfs/group/kaf26/default/public/LOCA2/training_data/LOCA2_training_2022-03-30.precip.kg.m-2.s-1.1950-2014.v2.nc;',
+Comment		=> 'https://loca.ucsd.edu/training-observed-data-sets/'
+}

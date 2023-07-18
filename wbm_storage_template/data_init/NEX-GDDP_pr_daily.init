@@ -1,0 +1,17 @@
+{
+Code_Name	=> 'NEX-GDDP_pr_daily',
+Time_Series	=> 'daily',
+Start_Date	=> '1950-01-01',
+End_Date	=> '2014-12-31',
+Name		=> 'NEX-GDDP, Global 0.25deg, Precipitation, Daily',
+Var_Name	=> 'pr',
+Units	    => 'kg m-2 s-1',
+Var_Scale	=> 86400,
+Var_Offset	=> 0,
+Orig_Units	=> 'K',
+Bands		=> 366,
+Processing	=> '',
+Projection	=> 'epsg:4326',
+File_Path	=> '/gpfs/group/kaf26/default/public/NEX-GDDP-CMIP6/models/xMODELx/xSSPx/pr/pr_day_xMODELx_xSSPx_xMEMBERx_xGRIDx__YEAR_.nc',
+Comment		=> 'https://www.nccs.nasa.gov/services/data-collections/land-based-products/nex-gddp-cmip6'
+}

@@ -1,0 +1,17 @@
+{
+Code_Name	=> 'Livneh2_Tmin_daily',
+Time_Series	=> 'daily',
+Start_Date	=> '1950-01-01',
+End_Date	=> '2014-12-31',
+Name		=> 'Livneh2, North America ~6km, Minimum Temperature, Daily',
+Var_Name	=> 'Tmin',
+Units	    => 'C',
+Var_Scale	=> 1,
+Var_Offset	=> -273.15,
+Orig_Units	=> 'K',
+Bands		=> 23741,
+Processing	=> '',
+Projection	=> 'epsg:4326',
+File_Path	=> '/gpfs/group/kaf26/default/public/LOCA2/training_data/LOCA2_training_2021-11-03.Tmin.degK.1950-2014.v1.nc',
+Comment		=> 'https://loca.ucsd.edu/training-observed-data-sets/'
+}

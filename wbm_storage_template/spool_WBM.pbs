@@ -1,0 +1,54 @@
+#!/bin/bash
+
+### #PBS -A open
+
+#PBS -A kaf26_c_g_sc_default
+#PBS -l nodes=1:ppn=15
+#PBS -l pmem=20gb
+#PBS -l walltime=30:00:00
+#PBS -l feature=rhel7
+#PBS -j oe
+
+echo "Job started on `hostname` at `date`"
+
+#
+# Top-level WBM directory that contains all the required files
+#
+export WBM_HOME=/gpfs/group/kaf26/default/dcl5300/test-runs_WBM/current
+
+#
+# SIF (container) file to use
+#
+# SIF_FILE=$WBM_HOME/ubuntu_20.04_wbm_2023_04_17.sif
+SIF_FILE=/gpfs/group/kaf26/default/dcl5300/test-runs_WBM/ubuntu_20.04_wbm_2023_04_17.sif
+
+#
+# Simulation directory
+# 
+export SIM_DIR=$WBM_HOME/$sim_dir
+
+singularity exec \
+  -B $SIM_DIR/data:/wbm/data \
+  -B $SIM_DIR/data_init:/wbm/data_init \
+  -B $SIM_DIR/spool:/wbm/spool \
+  -B $SIM_DIR/wbm_output:/wbm/wbm_output \
+  -B $SIM_DIR/WBM_run_state:/wbm/WBM_run_state \
+  -B $SIM_DIR/wbm_init:/wbm/wbm_init \
+  -B $SIM_DIR/model:/wbm/model \
+  -B $SIM_DIR/utilities:/wbm/utilities \
+  -B $SIM_DIR/gdal_test_files:/wbm/gdal_test_files \
+  $SIF_FILE chmod +x /wbm/wbm_output/build_spool_batch.pl
+
+singularity exec \
+  -B $SIM_DIR/data:/wbm/data \
+  -B $SIM_DIR/data_init:/wbm/data_init \
+  -B $SIM_DIR/spool:/wbm/spool \
+  -B $SIM_DIR/wbm_output:/wbm/wbm_output \
+  -B $SIM_DIR/WBM_run_state:/wbm/WBM_run_state \
+  -B $SIM_DIR/wbm_init:/wbm/wbm_init \
+  -B $SIM_DIR/model:/wbm/model \
+  -B $SIM_DIR/utilities:/wbm/utilities \
+  -B $SIM_DIR/gdal_test_files:/wbm/gdal_test_files \
+  $SIF_FILE /wbm/wbm_output/build_spool_batch.pl -f 20 -nc
+
+echo "Job Ended at `date`"

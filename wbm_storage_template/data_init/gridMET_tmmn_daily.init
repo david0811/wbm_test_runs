@@ -1,0 +1,17 @@
+{
+Code_Name	=> 'gridMET_tmmn_daily',
+Time_Series	=> 'daily',
+Start_Date	=> '1979-01-01',
+End_Date	=> '2018-12-31',
+Name		=> 'gridMET/METDATA, USA ~4km, Minimum Temperature, Daily',
+Var_Name	=> 'air_temperature',
+Units	    => 'C',
+Var_Scale	=> 1,
+Var_Offset	=> -273.15,
+Orig_Units	=> 'K',
+Bands		=> 366,
+Processing	=> '',
+Projection	=> 'epsg:4326',
+File_Path	=> '/gpfs/group/kzk10/default/public/UofI_MetData/raw/tmmn__YEAR_.nc;',
+Comment		=> 'https://www.climatologylab.org/gridmet.html'
+}

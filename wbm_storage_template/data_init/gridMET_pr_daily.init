@@ -1,0 +1,17 @@
+{
+Code_Name	=> 'gridMET_pr_daily',
+Time_Series	=> 'daily',
+Start_Date	=> '1979-01-01',
+End_Date	=> '2018-12-31',
+Name		=> 'gridMET/METDATA, USA ~4km, Precipitation, Daily',
+Var_Name	=> 'precipitation_amount',
+Units	    => 'mm/day',
+Var_Scale	=> 1,
+Var_Offset	=> 0,
+Orig_Units	=> 'mm',
+Bands		=> 366,
+Processing	=> '',
+Projection	=> 'epsg:4326',
+File_Path	=> '/gpfs/group/kzk10/default/public/UofI_MetData/raw/pr__YEAR_.nc;',
+Comment		=> 'https://www.climatologylab.org/gridmet.html'
+}
